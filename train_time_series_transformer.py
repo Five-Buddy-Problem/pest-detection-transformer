@@ -123,72 +123,75 @@ model = TimeSeriesTransformer().to(device)
 
 # Define Loss, Optimizer, and (optionally) a scheduler
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-10)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-8)
 # Optionally, use a scheduler:
 # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.9)
 
-# Training Loop with validation
-EPOCHS = 4
-for epoch in range(EPOCHS):
-    model.train()
-    running_loss = 0.0
-    correct = 0
-    total = 0
 
-    for images, labels in train_loader:
-        images, labels = images.to(device), labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels.long())
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-        _, predicted = torch.max(outputs, 1)
-        correct += (predicted == labels).sum().item()
-        total += labels.size(0)
+# switch train_time_series_transformer if statement to 0 to test it
+if 0:
+    # Training Loop with validation
+    EPOCHS = 10
+    for epoch in range(EPOCHS):
+        model.train()
+        running_loss = 0.0
+        correct = 0
+        total = 0
 
-    train_loss = running_loss / len(train_loader)
-    train_acc = correct / total
-
-    # Validation phase
-    model.eval()
-    val_loss = 0.0
-    correct_val = 0
-    total_val = 0
-    with torch.no_grad():
-        for images, labels in val_loader:
+        for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
+            optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels.long())
-            val_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
             _, predicted = torch.max(outputs, 1)
-            correct_val += (predicted == labels).sum().item()
-            total_val += labels.size(0)
-    val_loss /= len(val_loader)
-    val_acc = correct_val / total_val
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
 
-    print(f"Epoch {epoch + 1}/{EPOCHS} | Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f} | "
-          f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
+        train_loss = running_loss / len(train_loader)
+        train_acc = correct / total
 
-    # Optionally step the scheduler:
-    # scheduler.step()
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        correct_val = 0
+        total_val = 0
+        with torch.no_grad():
+            for images, labels in val_loader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, labels.long())
+                val_loss += loss.item()
+                _, predicted = torch.max(outputs, 1)
+                correct_val += (predicted == labels).sum().item()
+                total_val += labels.size(0)
+        val_loss /= len(val_loader)
+        val_acc = correct_val / total_val
 
-print("✅ Training complete!")
+        print(f"Epoch {epoch + 1}/{EPOCHS} | Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f} | "
+              f"Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
 
-# Evaluate on test set
-model.eval()
-correct_test = 0
-total_test = 0
-with torch.no_grad():
-    for images, labels in test_loader:
-        images, labels = images.to(device), labels.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs, 1)
-        correct_test += (predicted == labels).sum().item()
-        total_test += labels.size(0)
-test_acc = correct_test / total_test
-print(f"Test Accuracy: {test_acc:.4f}")
+        # Optionally step the scheduler:
+        # scheduler.step()
 
-# Save the model
-torch.save(model.state_dict(), "prot3_time_series_transformer.pth")
-print("✅ Model saved as prot3_time_series_transformer.pth")
+    print("✅ Training complete!")
+
+    # Evaluate on test set
+    model.eval()
+    correct_test = 0
+    total_test = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+            correct_test += (predicted == labels).sum().item()
+            total_test += labels.size(0)
+    test_acc = correct_test / total_test
+    print(f"Test Accuracy: {test_acc:.4f}")
+
+    # Save the model
+    torch.save(model.state_dict(), "prot7_time_series_transformer.pth")
+    print("✅ Model saved as prot7_time_series_transformer.pth")
